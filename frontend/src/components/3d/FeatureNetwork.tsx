@@ -1,60 +1,72 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Sphere, Line } from '@react-three/drei';
 import * as THREE from 'three';
+import { Points, PointMaterial } from '@react-three/drei';
 
-export function FeatureNetwork() {
-    const groupRef = useRef<THREE.Group>(null!);
+export const FeatureNetwork = () => {
+    const pointsRef = useRef<THREE.Points>(null!);
 
-    const nodes = useMemo(() => [
-        { pos: [2, 1, 0], label: 'Audit' },
-        { pos: [-2, 1, 1], label: 'Bias' },
-        { pos: [0, -1, 2], label: 'Risk' },
-        { pos: [2, -2, -1], label: 'Simulation' },
-        { pos: [-2, -2, 0], label: 'XAI' },
-        { pos: [0, 2, -1], label: 'Fixes' },
-    ], []);
+    const count = 500;
+    const positions = useMemo(() => {
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            pos[i * 3] = (Math.random() - 0.5) * 15;
+            pos[i * 3 + 1] = (Math.random() - 0.5) * 15;
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 15;
+        }
+        return pos;
+    }, []);
 
     useFrame((state) => {
         const time = state.clock.getElapsedTime();
-        groupRef.current.rotation.y = time * 0.1;
-        groupRef.current.position.y = Math.sin(time * 0.5) * 0.2;
+        if (pointsRef.current) {
+            pointsRef.current.rotation.y = time * 0.05;
+            pointsRef.current.rotation.x = time * 0.02;
+        }
     });
 
     return (
-        <group ref={groupRef} scale={1.2}>
-            {nodes.map((node, i) => (
-                <group key={i} position={node.pos as [number, number, number]}>
-                    <Sphere args={[0.15, 16, 16]}>
-                        <meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={2} />
-                    </Sphere>
-                    <Text
-                        position={[0, 0.35, 0]}
-                        fontSize={0.2}
-                        color="white"
-                        anchorX="center"
-                        anchorY="middle"
-                    >
-                        {node.label}
-                    </Text>
-                </group>
-            ))}
+        <group>
+            <Points ref={pointsRef} positions={positions} stride={3}>
+                <PointMaterial
+                    transparent
+                    color="#60a5fa"
+                    size={0.05}
+                    sizeAttenuation={true}
+                    depthWrite={false}
+                    blending={THREE.AdditiveBlending}
+                />
+            </Points>
 
-            {/* Connection Lines */}
-            {nodes.map((node, i) =>
-                nodes.slice(i + 1).map((other, j) => (
-                    <Line
-                        key={`${i}-${j}`}
-                        points={[node.pos as [number, number, number], other.pos as [number, number, number]]}
-                        color="#3b82f6"
-                        lineWidth={0.5}
-                        transparent
-                        opacity={0.2}
-                    />
-                ))
-            )}
+            {/* Some larger nodes for accent */}
+            {Array.from({ length: 15 }).map((_, i) => (
+                <LargeNode key={i} />
+            ))}
         </group>
     );
-}
+};
+
+const LargeNode = () => {
+    const meshRef = useRef<THREE.Mesh>(null!);
+    const pos = useMemo(() => [
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10
+    ] as [number, number, number], []);
+
+    useFrame((state) => {
+        const time = state.clock.getElapsedTime();
+        if (meshRef.current) {
+            meshRef.current.position.y += Math.sin(time + pos[0]) * 0.002;
+        }
+    });
+
+    return (
+        <mesh ref={meshRef} position={pos}>
+            <sphereGeometry args={[0.03, 16, 16]} />
+            <meshStandardMaterial color="#8b5cf6" emissive="#8b5cf6" emissiveIntensity={2} />
+        </mesh>
+    );
+};
