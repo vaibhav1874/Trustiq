@@ -4,6 +4,9 @@ import { useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Uploader } from '@/components/Uploader';
 import { Dashboard } from '@/components/Dashboard';
+import { AIExplanations } from '@/components/AIExplanations';
+import { AIChat } from '@/components/AIChat';
+import { ReportGenerator } from '@/components/ReportGenerator';
 import { api, type AuditResult, type BiasResult, type SimulationResult } from '@/lib/api';
 import {
     ShieldCheck, Loader2, Database, Activity, Scale,
@@ -494,7 +497,10 @@ export default function DashboardPage() {
                                 </div>
                             )}
 
+                            <ReportGenerator />
                             <Dashboard results={results} />
+                            <AIExplanations metrics={results} />
+                            <AIChat datasetContext={JSON.stringify(results)} />
                         </motion.div>
                     )}
                 </AnimatePresence>

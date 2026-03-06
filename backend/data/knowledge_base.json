@@ -1,0 +1,34 @@
+[
+    {
+        "topic": "Missing Values",
+        "explanation": "Missing values occur when no data is stored for a particular feature in an observation. This can happen due to data entry errors, equipment failure, or survey non-response.",
+        "risk": "Reduces the statistical power of the model and can lead to biased estimates if the missingness is not random. Most ML algorithms cannot handle NaN values directly.",
+        "detection_method": "Use `pandas.isnull().sum()` to identify the count of missing entries per column.",
+        "suggested_fix": "Imputation (Mean, Median, Mode), iterative imputation, or dropping rows/columns if the missingness is extensive.",
+        "example_scenario": "A health survey where respondents skip the 'Income' question. If lower-income individuals skip the question more often, the remaining data will be skewed."
+    },
+    {
+        "topic": "Dataset Bias (Demographic Parity)",
+        "explanation": "Bias in a dataset occurs when certain groups are unfairly represented or when labels are disproportionately assigned to one group over another.",
+        "risk": "Models trained on biased data will perpetuate or amplify social inequalities, leading to unfair decisions in hiring, lending, or law enforcement.",
+        "detection_method": "Calculate the difference in selection rates between groups (Demographic Parity Difference).",
+        "suggested_fix": "Resampling (oversampling minority or undersampling majority), reweighing samples, or choosing fairness-aware algorithms.",
+        "example_scenario": "An AI recruitment tool that has historically seen more male hires. If it uses this data, it will learn to favor male candidates over equally qualified female candidates."
+    },
+    {
+        "topic": "Outliers",
+        "explanation": "Outliers are data points that differ significantly from other observations. They may be caused by measurement error or may indicate a genuine but rare phenomenon.",
+        "risk": "Outliers significantly skew the mean and standard deviation, causing models like Linear Regression to perform poorly as they try to accommodate these extreme points.",
+        "detection_method": "Z-score (std dev > 3) or Interquartile Range (IQR) method.",
+        "suggested_fix": "Winsorizing (capping values), transformation (log scaling), or removal if they are confirmed as errors.",
+        "example_scenario": "In a dataset of house prices, one entry is listed as $100 instead of $1,000,000 due to a typo. This will drastically pull down the average price predicted by the model."
+    },
+    {
+        "topic": "Class Imbalance",
+        "explanation": "Occurs when one class in the target variable significantly outnumbers the others.",
+        "risk": "The model will achieve high accuracy by simply predicting the majority class every time, failing to identify the important minority class (e.g., fraud detection).",
+        "detection_method": "Count class frequencies in the target column.",
+        "suggested_fix": "SMOTE (Synthetic Minority Over-sampling Technique), adjusting class weights, or using precision-recall instead of accuracy as a metric.",
+        "example_scenario": "In credit card fraud detection, 99.9% of transactions are legitimate. A model that always predicts 'not fraud' will be 99.9% accurate but useless."
+    }
+]

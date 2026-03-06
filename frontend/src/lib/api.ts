@@ -57,5 +57,34 @@ export const api = {
         await new Promise(resolve => setTimeout(resolve, 3000));
         const response = await fetch(`${API_BASE_URL}/simulate`, { method: 'POST' });
         return response.json();
+    },
+
+    getAIExplanation: async (metrics: any) => {
+        const response = await fetch(`${API_BASE_URL}/ai/explain`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ metrics }),
+        });
+        return response.json();
+    },
+
+    chatWithAI: async (message: string, dataset_context: string = "") => {
+        const response = await fetch(`${API_BASE_URL}/ai/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, dataset_context }),
+        });
+        return response.json();
+    },
+
+    generateReport: async (format: string = "markdown") => {
+        const response = await fetch(`${API_BASE_URL}/ai/report?format=${format}`);
+        if (format === "json") return response.json();
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trustiq_report.${format === 'markdown' ? 'md' : format}`;
+        a.click();
     }
 };

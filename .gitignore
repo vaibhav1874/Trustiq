@@ -31,3 +31,10 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+
+# Backend Temp/Data
+backend/chroma_db/
+backend/test_ai_features.py
+backend/test_ollama.py
+uploads/
+backend/uploads/
