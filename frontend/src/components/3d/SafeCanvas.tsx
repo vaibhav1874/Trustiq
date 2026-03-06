@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { Canvas, Props as CanvasProps } from '@react-three/fiber';
+
+import { Canvas } from '@react-three/fiber';
 import { VisualFallback } from './VisualFallback';
 import { ErrorBoundary } from 'react-error-boundary';
 
-interface SafeCanvasProps extends CanvasProps {
+interface SafeCanvasProps extends React.ComponentProps<typeof Canvas> {
     fallbackType: 'orb' | 'background' | 'scanner' | 'network' | 'sphere';
     fallbackStatus?: string;
     children: React.ReactNode;

@@ -1,6 +1,11 @@
+'use client';
 import Link from 'next/link';
 import { ShieldCheck, Activity, BrainCircuit, Lock, ArrowRight, ChevronRight, Github, Scale } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SafeCanvas } from '@/components/3d/SafeCanvas';
+import { DatasetScanner } from '@/components/3d/DatasetScanner';
+import { FeatureNetwork } from '@/components/3d/FeatureNetwork';
+import { ParticleBackground } from '@/components/3d/ParticleBackground';
 
 export default function LandingPage() {
   return (
@@ -10,7 +15,14 @@ export default function LandingPage() {
       <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[130px] opacity-70" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-600/10 blur-[130px] opacity-70" />
-        <div className="absolute top-[30%] left-[30%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 blur-[120px] mix-blend-screen animate-pulse" />
+        <div className="absolute top-[30%] left-[30%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 blur-[120px] mix-blend-screen" />
+
+        {/* Particle Background */}
+        <div className="absolute inset-0">
+          <SafeCanvas fallbackType="background" camera={{ position: [0, 0, 20], fov: 75 }}>
+            <ParticleBackground />
+          </SafeCanvas>
+        </div>
       </div>
 
       {/* Navbar */}
@@ -61,28 +73,44 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Dashboard 3D Mockup Graphic Idea */}
-        <div className="mt-20 max-w-5xl mx-auto relative perspective-1000">
-          {/* Decorative elements representing abstract data shapes via CSS styling inline instead of huge svgs */}
-          <div className="w-full aspect-[2/1] bg-gradient-to-tr from-slate-800/80 to-slate-900/90 rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform rotate-x-12 translate-y-4 backdrop-blur-xl relative overflow-hidden flex flex-col">
-            <div className="h-10 border-b border-white/10 flex items-center px-4 gap-2 bg-slate-900/50">
-              <div className="w-3 h-3 rounded-full bg-red-400"></div>
-              <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-              <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+        {/* Dashboard 3D Mockup Graphic */}
+        <div className="mt-20 max-w-5xl mx-auto relative perspective-1000 px-4">
+          <div className="w-full aspect-[2/1] bg-slate-900/60 rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform rotate-x-6 backdrop-blur-xl relative overflow-hidden flex flex-col group hover:rotate-x-0 transition-transform duration-700">
+            <div className="h-10 border-b border-white/10 flex justify-between items-center px-4 bg-slate-900/80 shrink-0">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-400/60"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-400/60"></div>
+                <div className="w-3 h-3 rounded-full bg-emerald-400/60"></div>
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Scanner Active</div>
             </div>
-            <div className="flex-1 p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 opacity-60">
-              <div className="bg-slate-800/50 rounded-xl col-span-1 lg:col-span-2 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent"></div>
+
+            <div className="flex-1 relative">
+              <div className="absolute inset-0 z-0 opacity-40">
+                <SafeCanvas fallbackType="network">
+                  <FeatureNetwork />
+                </SafeCanvas>
               </div>
-              <div className="bg-slate-800/50 rounded-xl relative overflow-hidden">
-                <div className="absolute bottom-0 w-full h-[60%] bg-amber-500/20 rounded-t-xl"></div>
+
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="w-full h-full max-w-md max-h-80">
+                  <SafeCanvas fallbackType="scanner" camera={{ position: [0, 0, 5], fov: 50 }}>
+                    <DatasetScanner />
+                  </SafeCanvas>
+                </div>
               </div>
-              <div className="bg-slate-800/50 rounded-xl relative flex justify-center items-center">
-                <div className="w-16 h-16 rounded-full border-4 border-emerald-500/50 border-t-emerald-500 animate-spin"></div>
+
+              {/* Overlay UI elements */}
+              <div className="absolute top-6 left-6 z-20 space-y-4">
+                <div className="p-3 bg-white/5 border border-white/10 rounded-lg backdrop-blur-md">
+                  <div className="text-[10px] text-blue-400 font-bold uppercase mb-1">Integrity Score</div>
+                  <div className="text-2xl font-mono text-white">99.4%</div>
+                </div>
               </div>
             </div>
+
             {/* Overlay glow */}
-            <div className="absolute inset-0 bg-blue-500/5 bg-blend-overlay pointer-events-none"></div>
+            <div className="absolute inset-0 bg-blue-500/5 pointer-events-none"></div>
           </div>
         </div>
       </section>
