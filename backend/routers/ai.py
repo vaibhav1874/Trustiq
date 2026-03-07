@@ -13,12 +13,29 @@ class ChatRequest(BaseModel):
 class ExplainRequest(BaseModel):
     metrics: dict
 
+class SchemaRequest(BaseModel):
+    prompt: str
+
 @router.post("/chat")
 async def chat_with_ai(request: ChatRequest):
     """Chat with the AI Dataset Assistant."""
     try:
         response = rag_engine.query(request.message, request.dataset_context)
         return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/generate_schema")
+async def generate_schema(request: SchemaRequest):
+    """Generate a synthetic dataset JSON schema based on a prompt."""
+    try:
+        schema_str = rag_engine.generate_dataset_schema(request.prompt)
+        # Parse and return as dict so FastAPI returns valid JSON automatically
+        import json
+        schema_dict = json.loads(schema_str)
+        return schema_dict
+    except json.JSONDecodeError:
+         raise HTTPException(status_code=500, detail="AI produced invalid JSON output.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

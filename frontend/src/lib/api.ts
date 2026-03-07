@@ -86,5 +86,18 @@ export const api = {
         a.href = url;
         a.download = `trustiq_report.${format === 'markdown' ? 'md' : format}`;
         a.click();
+    },
+
+    generateSyntheticSchema: async (prompt: string) => {
+        const response = await fetch(`${API_BASE_URL}/ai/generate_schema`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt }),
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to generate schema');
+        }
+        return response.json();
     }
 };

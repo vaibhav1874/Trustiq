@@ -83,5 +83,45 @@ class RAGEngine:
         except Exception as e:
             return f"Error generating response: {str(e)}"
 
+    def generate_dataset_schema(self, user_request: str) -> str:
+        """Generates a synthetic dataset JSON schema based on the user's description."""
+        template = """
+        You are an expert data scientist and synthetic dataset architect.
+        Your task is to convert a user's natural language request into a structured dataset schema that will be used by a Python data generator.
+        
+        Analyze the request and produce a structured JSON schema.
+        
+        The schema must contain:
+        dataset_name, description, rows, features, target_column, missing_value_ratio, noise_level, outlier_ratio
+        
+        For each feature include:
+        name, type (numeric, categorical, boolean), distribution (normal, uniform, skewed), min_value, max_value, possible_categories (if categorical)
+        
+        The target_column must contain:
+        name, type, class_distribution
+        
+        The schema must be optimized for generating synthetic datasets for machine learning training.
+        
+        The output MUST be strictly valid JSON and contain NO other text or explanation. DO NOT use markdown code formatting. Only return valid JSON.
+
+        ### USER REQUEST:
+        {user_request}
+        """
+        
+        prompt = template.format(user_request=user_request)
+        
+        try:
+            # We enforce JSON output strictly; we could use Ollama's format="json" param if supported, but standard invoke usually works well if prompted heavily.
+            schema_json = self.llm.invoke(prompt)
+            # Basic cleanup in case Ollama wraps it in ```json ... ```
+            if "```json" in schema_json:
+                schema_json = schema_json.split("```json")[-1].split("```")[0].strip()
+            elif "```" in schema_json:
+                schema_json = schema_json.split("```")[-1].split("```")[0].strip()
+                
+            return schema_json
+        except Exception as e:
+            raise Exception(f"Failed to generate schema: {str(e)}")
+
 # Singleton instance
 rag_engine = RAGEngine()

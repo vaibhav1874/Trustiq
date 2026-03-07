@@ -7,6 +7,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { AIExplanations } from '@/components/AIExplanations';
 import { AIChat } from '@/components/AIChat';
 import { ReportGenerator } from '@/components/ReportGenerator';
+import { SyntheticDataArchitect } from '@/components/SyntheticDataArchitect';
 import { api, type AuditResult, type BiasResult, type SimulationResult } from '@/lib/api';
 import {
     ShieldCheck, Loader2, Database, Activity, Scale,
@@ -40,6 +41,7 @@ export default function DashboardPage() {
         }
     }, [user, loading, router]);
 
+    const [mode, setMode] = useState<'analyze' | 'generate'>('analyze');
     const [isProcessing, setIsProcessing] = useState(false);
     const [analysisStep, setAnalysisStep] = useState(0);
     const [progressText, setProgressText] = useState('');
@@ -217,140 +219,164 @@ export default function DashboardPage() {
                 <AnimatePresence mode="wait">
                     {!isProcessing && !results && (
                         <motion.div
-                            key="uploader"
+                            key="mode-selector"
                             initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
                             className="w-full flex flex-col items-center"
                         >
-                            <div className="w-full max-w-5xl mb-20 hidden md:block">
-                                <div className="flex justify-between items-center bg-white/5 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
-                                    {[
-                                        { label: 'Upload', icon: UploadCloud },
-                                        { label: 'Audit', icon: Activity },
-                                        { label: 'Bias', icon: Scale },
-                                        { label: 'Simulate', icon: BrainCircuit },
-                                        { label: 'Report', icon: FileText }
-                                    ].map((s, i, arr) => (
-                                        <div key={i} className="flex items-center">
-                                            <div className="flex flex-col items-center gap-4 group">
-                                                <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400 shadow-inner group-hover:border-blue-500/50 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-500">
-                                                    <s.icon className="w-6 h-6" />
+                            {/* Mode Toggle */}
+                            <div className="flex bg-slate-900/80 p-1.5 rounded-full mb-16 border border-white/10 shadow-xl shadow-blue-500/5">
+                                <button
+                                    onClick={() => setMode('analyze')}
+                                    className={`px-8 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all ${mode === 'analyze' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    <Activity className="w-4 h-4" /> Analyze Dataset
+                                </button>
+                                <button
+                                    onClick={() => setMode('generate')}
+                                    className={`px-8 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all ${mode === 'generate' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    <BrainCircuit className="w-4 h-4" /> Generate Dataset Schema
+                                </button>
+                            </div>
+
+                            {mode === 'analyze' ? (
+                                <>
+                                    <div className="w-full max-w-5xl mb-20 hidden md:block">
+                                        <div className="flex justify-between items-center bg-white/5 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
+                                            {[
+                                                { label: 'Upload', icon: UploadCloud },
+                                                { label: 'Audit', icon: Activity },
+                                                { label: 'Bias', icon: Scale },
+                                                { label: 'Simulate', icon: BrainCircuit },
+                                                { label: 'Report', icon: FileText }
+                                            ].map((s, i, arr) => (
+                                                <div key={i} className="flex items-center">
+                                                    <div className="flex flex-col items-center gap-4 group">
+                                                        <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400 shadow-inner group-hover:border-blue-500/50 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-500">
+                                                            <s.icon className="w-6 h-6" />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{s.label}</span>
+                                                    </div>
+                                                    {i < arr.length - 1 && (
+                                                        <div className="w-16 h-[2px] bg-gradient-to-r from-slate-700 to-slate-800 mx-6 opacity-30" />
+                                                    )}
                                                 </div>
-                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{s.label}</span>
-                                            </div>
-                                            {i < arr.length - 1 && (
-                                                <div className="w-16 h-[2px] bg-gradient-to-r from-slate-700 to-slate-800 mx-6 opacity-30" />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-10 items-start mb-20">
-                                <div className="lg:col-span-1 space-y-8">
-                                    <div className="glass-card p-10 rounded-[3rem] border border-white/10 bg-white/[0.03] shadow-2xl">
-                                        <h3 className="text-xl font-bold mb-8 flex items-center gap-4 text-white">
-                                            <div className="p-2.5 bg-blue-500/20 rounded-xl">
-                                                <ListChecks className="w-6 h-6 text-blue-400" />
-                                            </div>
-                                            Checklist
-                                        </h3>
-                                        <ul className="space-y-5 text-sm font-medium text-slate-400">
-                                            <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> CSV / JSON datasets</li>
-                                            <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Structured schemas</li>
-                                            <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Target features</li>
-                                            <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Max size 50MB</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div className="lg:col-span-2 flex flex-col items-center">
-                                    <div className="w-full transform transition-all hover:scale-[1.01] duration-500">
-                                        <Uploader onUpload={handleUpload} />
-                                    </div>
-
-                                    <div className="mt-12 text-center w-full">
-                                        <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-8">Test with Samples</p>
-                                        <div className="flex flex-wrap justify-center gap-5">
-                                            {[
-                                                { id: 'credit_risk', label: 'Credit Risk', color: 'text-blue-400', glow: 'shadow-blue-500/20' },
-                                                { id: 'healthcare', label: 'Medical Inequity', color: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-                                                { id: 'hiring_bias', label: 'HR Fairness', color: 'text-purple-400', glow: 'shadow-purple-500/20' }
-                                            ].map((sample) => (
-                                                <button
-                                                    key={sample.id}
-                                                    onClick={() => loadSampleDataset(sample.id)}
-                                                    className={`group px-6 py-3.5 rounded-[1.5rem] bg-white/[0.03] hover:bg-white/[0.08] transition-all border border-white/10 text-xs font-bold flex items-center gap-4 hover:border-white/30 hover:shadow-2xl ${sample.glow}`}
-                                                >
-                                                    <Database className={`w-5 h-5 ${sample.color} group-hover:scale-110 transition-transform`} />
-                                                    {sample.label}
-                                                </button>
                                             ))}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="lg:col-span-1 space-y-8">
-                                    <div className="glass-card p-10 rounded-[3rem] border border-white/10 bg-white/[0.03] shadow-2xl">
-                                        <h3 className="text-xl font-bold mb-8 flex items-center gap-4 text-white">
-                                            <div className="p-2.5 bg-purple-500/20 rounded-xl">
-                                                <Clock className="w-6 h-6 text-purple-400" />
+                                    <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-10 items-start mb-20">
+                                        <div className="lg:col-span-1 space-y-8">
+                                            <div className="glass-card p-10 rounded-[3rem] border border-white/10 bg-white/[0.03] shadow-2xl">
+                                                <h3 className="text-xl font-bold mb-8 flex items-center gap-4 text-white">
+                                                    <div className="p-2.5 bg-blue-500/20 rounded-xl">
+                                                        <ListChecks className="w-6 h-6 text-blue-400" />
+                                                    </div>
+                                                    Checklist
+                                                </h3>
+                                                <ul className="space-y-5 text-sm font-medium text-slate-400">
+                                                    <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> CSV / JSON datasets</li>
+                                                    <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Structured schemas</li>
+                                                    <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Target features</li>
+                                                    <li className="flex items-start gap-4 hover:text-white transition-colors"><Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> Max size 50MB</li>
+                                                </ul>
                                             </div>
-                                            History
-                                        </h3>
-                                        <ul className="space-y-6">
-                                            {[
-                                                { name: 'fin_risk_v2.csv', status: 'Analysis Done', color: 'text-blue-400' },
-                                                { name: 'clinical_trials.csv', status: 'High Risk', color: 'text-red-400' },
-                                                { name: 'user_cohort_B.csv', status: 'Safe', color: 'text-emerald-400' }
-                                            ].map((item, idx) => (
-                                                <li key={idx} className="flex flex-col gap-2 group cursor-pointer">
-                                                    <span className="text-slate-300 font-bold truncate text-sm group-hover:text-white transition-colors">{item.name}</span>
-                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${item.color} opacity-80 group-hover:opacity-100 transition-opacity`}>
-                                                        {item.status}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Feature Inspection Grid */}
-                            <div className="w-full max-w-7xl pb-40 text-center relative px-4">
-                                <div className="absolute inset-0 -z-10 opacity-60 pointer-events-none overflow-hidden">
-                                    <SafeCanvas
-                                        fallbackType="network"
-                                        camera={{ position: [0, 0, 10] }}
-                                        gl={{ alpha: true }}
-                                    >
-                                        <ambientLight intensity={1.5} />
-                                        <pointLight position={[10, 10, 10]} intensity={3} color="#3b82f6" />
-                                        <FeatureNetwork />
-                                    </SafeCanvas>
-                                </div>
-
-                                <h2 className="text-4xl font-black mb-16 text-white tracking-tighter">Enterprise Quality Layer</h2>
-                                <div className="grid grid-cols-2 lg:grid-cols-6 gap-6 text-left">
-                                    {[
-                                        { img: Activity, title: 'Compliance', desc: 'Auto-detect policy breaches.' },
-                                        { img: Scale, title: 'Inclusion', desc: 'Identify marginalized bias.' },
-                                        { img: BrainCircuit, title: 'Predictive', desc: 'Future-risk impact scores.' },
-                                        { img: Code, title: 'Simulation', desc: 'Edge case generation.' },
-                                        { img: Info, title: 'Logic View', desc: 'Human readable AI logic.' },
-                                        { img: CheckCircle, title: 'Auto-Fix', desc: 'One-click data repair.' }
-                                    ].map((f, idx) => (
-                                        <div key={idx} className="glass-card p-8 rounded-[2rem] border border-white/5 bg-white/[0.01] hover:bg-white/[0.05] transition-all hover:border-white/20 hover:-translate-y-2 group shadow-xl">
-                                            <div className="p-4 bg-blue-500/10 rounded-2xl w-fit mb-6 group-hover:bg-blue-500/20 transition-colors">
-                                                <f.img className="w-6 h-6 text-blue-400" />
-                                            </div>
-                                            <h4 className="text-sm font-black text-white mb-3 tracking-tight">{f.title}</h4>
-                                            <p className="text-[11px] text-slate-500 leading-relaxed font-bold">{f.desc}</p>
                                         </div>
-                                    ))}
+
+                                        <div className="lg:col-span-2 flex flex-col items-center">
+                                            <div className="w-full transform transition-all hover:scale-[1.01] duration-500">
+                                                <Uploader onUpload={handleUpload} />
+                                            </div>
+
+                                            <div className="mt-12 text-center w-full">
+                                                <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-8">Test with Samples</p>
+                                                <div className="flex flex-wrap justify-center gap-5">
+                                                    {[
+                                                        { id: 'credit_risk', label: 'Credit Risk', color: 'text-blue-400', glow: 'shadow-blue-500/20' },
+                                                        { id: 'healthcare', label: 'Medical Inequity', color: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
+                                                        { id: 'hiring_bias', label: 'HR Fairness', color: 'text-purple-400', glow: 'shadow-purple-500/20' }
+                                                    ].map((sample) => (
+                                                        <button
+                                                            key={sample.id}
+                                                            onClick={() => loadSampleDataset(sample.id)}
+                                                            className={`group px-6 py-3.5 rounded-[1.5rem] bg-white/[0.03] hover:bg-white/[0.08] transition-all border border-white/10 text-xs font-bold flex items-center gap-4 hover:border-white/30 hover:shadow-2xl ${sample.glow}`}
+                                                        >
+                                                            <Database className={`w-5 h-5 ${sample.color} group-hover:scale-110 transition-transform`} />
+                                                            {sample.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="lg:col-span-1 space-y-8">
+                                            <div className="glass-card p-10 rounded-[3rem] border border-white/10 bg-white/[0.03] shadow-2xl">
+                                                <h3 className="text-xl font-bold mb-8 flex items-center gap-4 text-white">
+                                                    <div className="p-2.5 bg-purple-500/20 rounded-xl">
+                                                        <Clock className="w-6 h-6 text-purple-400" />
+                                                    </div>
+                                                    History
+                                                </h3>
+                                                <ul className="space-y-6">
+                                                    {[
+                                                        { name: 'fin_risk_v2.csv', status: 'Analysis Done', color: 'text-blue-400' },
+                                                        { name: 'clinical_trials.csv', status: 'High Risk', color: 'text-red-400' },
+                                                        { name: 'user_cohort_B.csv', status: 'Safe', color: 'text-emerald-400' }
+                                                    ].map((item, idx) => (
+                                                        <li key={idx} className="flex flex-col gap-2 group cursor-pointer">
+                                                            <span className="text-slate-300 font-bold truncate text-sm group-hover:text-white transition-colors">{item.name}</span>
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest ${item.color} opacity-80 group-hover:opacity-100 transition-opacity`}>
+                                                                {item.status}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Feature Inspection Grid */}
+                                    <div className="w-full max-w-7xl pb-40 text-center relative px-4">
+                                        <div className="absolute inset-0 -z-10 opacity-60 pointer-events-none overflow-hidden">
+                                            <SafeCanvas
+                                                fallbackType="network"
+                                                camera={{ position: [0, 0, 10] }}
+                                                gl={{ alpha: true }}
+                                            >
+                                                <ambientLight intensity={1.5} />
+                                                <pointLight position={[10, 10, 10]} intensity={3} color="#3b82f6" />
+                                                <FeatureNetwork />
+                                            </SafeCanvas>
+                                        </div>
+
+                                        <h2 className="text-4xl font-black mb-16 text-white tracking-tighter">Enterprise Quality Layer</h2>
+                                        <div className="grid grid-cols-2 lg:grid-cols-6 gap-6 text-left">
+                                            {[
+                                                { img: Activity, title: 'Compliance', desc: 'Auto-detect policy breaches.' },
+                                                { img: Scale, title: 'Inclusion', desc: 'Identify marginalized bias.' },
+                                                { img: BrainCircuit, title: 'Predictive', desc: 'Future-risk impact scores.' },
+                                                { img: Code, title: 'Simulation', desc: 'Edge case generation.' },
+                                                { img: Info, title: 'Logic View', desc: 'Human readable AI logic.' },
+                                                { img: CheckCircle, title: 'Auto-Fix', desc: 'One-click data repair.' }
+                                            ].map((f, idx) => (
+                                                <div key={idx} className="glass-card p-8 rounded-[2rem] border border-white/5 bg-white/[0.01] hover:bg-white/[0.05] transition-all hover:border-white/20 hover:-translate-y-2 group shadow-xl">
+                                                    <div className="p-4 bg-blue-500/10 rounded-2xl w-fit mb-6 group-hover:bg-blue-500/20 transition-colors">
+                                                        <f.img className="w-6 h-6 text-blue-400" />
+                                                    </div>
+                                                    <h4 className="text-sm font-black text-white mb-3 tracking-tight">{f.title}</h4>
+                                                    <p className="text-[11px] text-slate-500 leading-relaxed font-bold">{f.desc}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="w-full max-w-6xl mb-20">
+                                    <SyntheticDataArchitect />
                                 </div>
-                            </div>
+                            )}
                         </motion.div>
                     )}
 
