@@ -20,3 +20,5 @@ chromadb
 sentence-transformers
 reportlab
 pypdf
+langchain-google-genai
+python-dotenv

@@ -6,14 +6,27 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import OllamaLLM
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 class RAGEngine:
-    def __init__(self, model_name="llama3.1:latest", persist_directory="./chroma_db"):
-        self.model_name = model_name
-        self.persist_directory = persist_directory
+    def __init__(self, model_name=None, persist_directory=None):
+        self.model_name = model_name or os.getenv("LLM_MODEL", "llama3.1:latest")
+        self.persist_directory = persist_directory or os.getenv("PERSIST_DIRECTORY", "./chroma_db")
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        
         # Use a lightweight embedding model
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        self.llm = OllamaLLM(model=self.model_name, base_url="http://localhost:11434")
+        
+        # Initialize LLM
+        self.google_api_key = os.getenv("GOOGLE_API_KEY")
+        
+        if self.google_api_key:
+            # Use Gemini if API key is provided
+            self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=self.google_api_key)
+        else:
+            # Fallback to Ollama
+            self.llm = OllamaLLM(model=self.model_name, base_url=self.ollama_base_url)
+        
         self.vectorstore = None
         self._initialize_vectorstore()
 
